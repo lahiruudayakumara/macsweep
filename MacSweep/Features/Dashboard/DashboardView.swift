@@ -19,15 +19,6 @@ public struct DashboardView: View {
                             Text("MacSweep Overview")
                                 .font(.system(size: 22, weight: .bold))
                                 .foregroundColor(.msLabel)
-
-                            HStack(spacing: 5) {
-                                Circle()
-                                    .fill(Color.msSafe)
-                                    .frame(width: 7, height: 7)
-                                Text("System Optimal")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.msSafe)
-                            }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
                             .background(Color.msSafe.opacity(0.12))
@@ -42,7 +33,7 @@ public struct DashboardView: View {
                     Spacer()
 
                     SecondaryButton(title: "Full Scan", iconName: "sparkles") {
-                        coordinator.navigate(to: .smartScan)
+                        coordinator.startFullScan()
                     }
                 }
                 .padding(.horizontal, 4)
@@ -55,11 +46,7 @@ public struct DashboardView: View {
                         cleanableBytes: viewModel.cleanableBytes,
                         itemsCount: viewModel.scannedItemsCount,
                         isScanning: viewModel.isScanning,
-                        onScanAction: {
-                            Task {
-                                await viewModel.runQuickScan()
-                            }
-                        }
+                        onScanAction: { coordinator.startSmartScan() }
                     )
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -81,7 +68,7 @@ public struct DashboardView: View {
                             iconName: "sparkles",
                             iconColor: .purple,
                             categoryTag: "System",
-                            action: { coordinator.navigate(to: .smartScan) }
+                            action: { coordinator.startSmartScan() }
                         )
 
                         QuickActionCard(
