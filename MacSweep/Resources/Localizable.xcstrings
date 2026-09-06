@@ -517,6 +517,9 @@
     "Cleanup tasks will finish silently while the app is in the background." : {
 
     },
+    "Cleanup tasks will finish silently while the app is in the background." : {
+
+    },
     "Clear web browser caches, cookies, and tracking artifacts" : {
 
     },
