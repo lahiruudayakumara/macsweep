@@ -13,7 +13,8 @@ public struct FileEnumerator: Sendable {
     public static func enumerate(
         directory directoryURL: URL,
         includeHidden: Bool = false,
-        skipPackageDescendants: Bool = true
+        skipPackageDescendants: Bool = true,
+        control: ScanControl? = nil
     ) -> AsyncStream<FileMetadata> {
         AsyncStream { continuation in
             Task.detached(priority: .userInitiated) {
@@ -49,8 +50,9 @@ public struct FileEnumerator: Sendable {
                 }
 
                 for case let fileURL as URL in enumerator {
-                    if Task.isCancelled {
-                        break
+                    if Task.isCancelled { break }
+                    if let control {
+                        guard await control.waitUntilRunnable() else { break }
                     }
                     if let metadata = FileMetadata.from(fileURL) {
                         continuation.yield(metadata)
@@ -64,11 +66,16 @@ public struct FileEnumerator: Sendable {
 
     /// Calculates the total size of a directory by summing all contained file sizes.
     /// - Parameter onProgress: Optional closure called periodically with active file path.
-    public static func directorySize(_ url: URL, onProgress: (@Sendable (String) -> Void)? = nil) async -> Int64 {
+    public static func directorySize(
+        _ url: URL,
+        onProgress: (@Sendable (String) -> Void)? = nil,
+        control: ScanControl? = nil
+    ) async -> Int64 {
         var totalSize: Int64 = 0
         var count = 0
 
-        for await metadata in enumerate(directory: url, includeHidden: true) {
+        for await metadata in enumerate(directory: url, includeHidden: true, control: control) {
+            guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { break }
             if !metadata.isDirectory {
                 totalSize += metadata.size
             }

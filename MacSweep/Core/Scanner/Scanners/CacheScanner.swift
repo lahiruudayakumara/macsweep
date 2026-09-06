@@ -16,10 +16,11 @@ public struct CacheScanner: Sendable {
     }
 
     /// Scans cache directories and returns discovered cleanable items.
-    public func scan(onProgress: (@Sendable (String) -> Void)? = nil) async -> [ScanItem] {
+    public func scan(onProgress: (@Sendable (String) -> Void)? = nil, control: ScanControl? = nil) async -> [ScanItem] {
         var items: [ScanItem] = []
 
         for cacheDir in cacheDirectories {
+            guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
             guard fileManager.fileExists(atPath: cacheDir.path) else { continue }
             onProgress?(cacheDir.path)
             Logger.scanner.debug("Scanning cache directory: \(cacheDir.path, privacy: .private)")
@@ -32,7 +33,7 @@ public struct CacheScanner: Sendable {
                 )
 
                 for itemURL in contents {
-                    if Task.isCancelled { return items }
+                    guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
                     onProgress?(itemURL.path)
 
                     let values = try? itemURL.resourceValues(forKeys: [.isDirectoryKey])
@@ -40,7 +41,7 @@ public struct CacheScanner: Sendable {
                     let size: Int64
 
                     if isDir {
-                        size = await FileEnumerator.directorySize(itemURL, onProgress: onProgress)
+                        size = await FileEnumerator.directorySize(itemURL, onProgress: onProgress, control: control)
                     } else {
                         let fileValues = try? itemURL.resourceValues(forKeys: [.totalFileAllocatedSizeKey, .fileSizeKey])
                         size = Int64(fileValues?.totalFileAllocatedSize ?? fileValues?.fileSize ?? 0)

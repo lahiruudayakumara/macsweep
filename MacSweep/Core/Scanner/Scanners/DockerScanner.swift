@@ -1,41 +1,12 @@
 import Foundation
 import OSLog
 
-/// Scans Docker Desktop build caches and data.
+/// Docker cleanup requires Docker Engine commands so its internal database remains
+/// consistent. Direct filesystem deletion is deliberately not offered as cleanup.
 public struct DockerScanner: Sendable {
-    private let fileManager = FileManager.default
-
-    private var targetPaths: [(URL, String)] {
-        let home = fileManager.homeDirectoryForCurrentUser
-        return [
-            (home.appendingPathComponent("Library/Containers/com.docker.docker/Data"), "Docker Data"),
-            (home.appendingPathComponent(".docker"), "Docker Config")
-        ]
-    }
-
-    public func scan(onProgress: (@Sendable (String) -> Void)? = nil) async -> [ScanItem] {
-        var items: [ScanItem] = []
-
-        for (path, label) in targetPaths {
-            guard fileManager.fileExists(atPath: path.path) else { continue }
-            onProgress?(path.path)
-            Logger.scanner.debug("Scanning Docker path: \(label)")
-
-            let size = await FileEnumerator.directorySize(path, onProgress: onProgress)
-            guard size > 0 else { continue }
-
-            let modDate = (try? path.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? Date.distantPast
-
-            items.append(ScanItem(
-                url: path,
-                size: size,
-                category: .developerDocker,
-                isDirectory: true,
-                modificationDate: modDate
-            ))
-        }
-
-        Logger.scanner.info("Docker scan complete: \(items.count) items")
-        return items
+    public func scan(onProgress: (@Sendable (String) -> Void)? = nil, control: ScanControl? = nil) async -> [ScanItem] {
+        guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return [] }
+        Logger.scanner.info("Docker filesystem cleanup skipped; engine-managed pruning is required")
+        return []
     }
 }

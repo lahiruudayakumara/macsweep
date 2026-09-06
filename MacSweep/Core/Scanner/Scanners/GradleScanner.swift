@@ -13,20 +13,20 @@ public struct GradleScanner: Sendable {
             (home.appendingPathComponent(".gradle/daemon"), "Gradle Daemon Logs"),
             (home.appendingPathComponent(".gradle/native"), "Gradle Native Cache"),
             (home.appendingPathComponent(".android/build-cache"), "Android Build Cache"),
-            (home.appendingPathComponent(".android/cache"), "Android SDK Cache"),
-            (home.appendingPathComponent(".android/avd"), "Android AVD Cache")
+            (home.appendingPathComponent(".android/cache"), "Android SDK Cache")
         ]
     }
 
-    public func scan(onProgress: (@Sendable (String) -> Void)? = nil) async -> [ScanItem] {
+    public func scan(onProgress: (@Sendable (String) -> Void)? = nil, control: ScanControl? = nil) async -> [ScanItem] {
         var items: [ScanItem] = []
 
         for (path, label) in targetPaths {
+            guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
             guard fileManager.fileExists(atPath: path.path) else { continue }
             onProgress?(path.path)
             Logger.scanner.debug("Scanning Gradle path: \(label)")
 
-            let size = await FileEnumerator.directorySize(path, onProgress: onProgress)
+            let size = await FileEnumerator.directorySize(path, onProgress: onProgress, control: control)
             guard size > 0 else { continue }
 
             let modDate = (try? path.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? Date.distantPast

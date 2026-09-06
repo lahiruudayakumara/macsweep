@@ -12,16 +12,17 @@ public struct LogScanner: Sendable {
         ]
     }
 
-    public func scan(onProgress: (@Sendable (String) -> Void)? = nil) async -> [ScanItem] {
+    public func scan(onProgress: (@Sendable (String) -> Void)? = nil, control: ScanControl? = nil) async -> [ScanItem] {
         var items: [ScanItem] = []
 
         for logDir in logDirectories {
+            guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
             guard fileManager.fileExists(atPath: logDir.path) else { continue }
             onProgress?(logDir.path)
             Logger.scanner.debug("Scanning log directory: \(logDir.path, privacy: .private)")
 
-            for await metadata in FileEnumerator.enumerate(directory: logDir, includeHidden: false) {
-                if Task.isCancelled { return items }
+            for await metadata in FileEnumerator.enumerate(directory: logDir, includeHidden: false, control: control) {
+                guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
                 onProgress?(metadata.url.path)
                 guard !metadata.isDirectory && metadata.size > 0 else { continue }
 
