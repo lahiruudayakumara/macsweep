@@ -6,13 +6,22 @@ public struct ScanItem: Sendable {
     public let url: URL
     public let size: Int64
     public let category: CleanupCategory
+    public let risk: CleanupRisk?
     public let isDirectory: Bool
     public let modificationDate: Date
 
-    public init(url: URL, size: Int64, category: CleanupCategory, isDirectory: Bool, modificationDate: Date) {
+    public init(
+        url: URL,
+        size: Int64,
+        category: CleanupCategory,
+        risk: CleanupRisk? = nil,
+        isDirectory: Bool,
+        modificationDate: Date
+    ) {
         self.url = url
         self.size = size
         self.category = category
+        self.risk = risk
         self.isDirectory = isDirectory
         self.modificationDate = modificationDate
     }
@@ -23,7 +32,7 @@ public struct ScanItem: Sendable {
             url: url,
             size: size,
             category: category,
-            risk: risk,
+            risk: risk ?? self.risk,
             isDirectory: isDirectory,
             modificationDate: modificationDate
         )

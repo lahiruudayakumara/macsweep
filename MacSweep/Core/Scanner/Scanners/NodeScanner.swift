@@ -8,24 +8,25 @@ public struct NodeScanner: Sendable {
     private var targetPaths: [(URL, String)] {
         let home = fileManager.homeDirectoryForCurrentUser
         return [
-            (home.appendingPathComponent(".npm"), "npm Cache & Logs"),
-            (home.appendingPathComponent("Library/pnpm"), "pnpm Store & Data"),
-            (home.appendingPathComponent(".local/share/pnpm"), "pnpm Data (XDG)"),
+            (home.appendingPathComponent(".npm/_cacache"), "npm Cache"),
+            (home.appendingPathComponent(".npm/_logs"), "npm Logs"),
+            (home.appendingPathComponent("Library/pnpm/store"), "pnpm Store"),
+            (home.appendingPathComponent(".local/share/pnpm/store"), "pnpm Store (XDG)"),
             (home.appendingPathComponent("Library/Caches/Yarn"), "Yarn Cache"),
-            (home.appendingPathComponent(".bun/install/cache"), "Bun Cache"),
-            (home.appendingPathComponent(".bun/install"), "Bun Install Cache")
+            (home.appendingPathComponent(".bun/install/cache"), "Bun Cache")
         ]
     }
 
-    public func scan(onProgress: (@Sendable (String) -> Void)? = nil) async -> [ScanItem] {
+    public func scan(onProgress: (@Sendable (String) -> Void)? = nil, control: ScanControl? = nil) async -> [ScanItem] {
         var items: [ScanItem] = []
 
         for (path, label) in targetPaths {
+            guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
             guard fileManager.fileExists(atPath: path.path) else { continue }
             onProgress?(path.path)
             Logger.scanner.debug("Scanning Node path: \(label)")
 
-            let size = await FileEnumerator.directorySize(path, onProgress: onProgress)
+            let size = await FileEnumerator.directorySize(path, onProgress: onProgress, control: control)
             guard size > 0 else { continue }
 
             let modDate = (try? path.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? Date.distantPast

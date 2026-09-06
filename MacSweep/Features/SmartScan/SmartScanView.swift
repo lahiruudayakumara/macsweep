@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct SmartScanView: View {
     @EnvironmentObject private var environment: AppEnvironment
+    @EnvironmentObject private var coordinator: NavigationCoordinator
     @StateObject private var viewModel: SmartScanViewModel
     @State private var showConfirmDialog = false
 
@@ -12,7 +13,12 @@ public struct SmartScanView: View {
     public var body: some View {
         VStack(spacing: 0) {
             if viewModel.isScanning {
-                ScanProgressView(progress: viewModel.currentProgress)
+                ScanProgressView(
+                    progress: viewModel.currentProgress,
+                    isPaused: viewModel.isPaused,
+                    onPauseResume: viewModel.togglePause,
+                    onStop: viewModel.stopScan
+                )
             } else if let cleanResult = viewModel.lastCleanResult {
                 ScanSummaryView(result: cleanResult) {
                     Task { await viewModel.startScan() }
@@ -127,8 +133,8 @@ public struct SmartScanView: View {
         .sheet(isPresented: $showConfirmDialog) {
             ConfirmationDialog(
                 title: "Approve Optimization & Cleanup?",
-                message: "You are approving the permanent removal of \(viewModel.selectedCount) selected items (\(ByteFormatter.format(viewModel.selectedBytes))) to free up disk space on your Mac. System files and SIP integrity remain protected.",
-                confirmTitle: "Approve & Clean \(ByteFormatter.format(viewModel.selectedBytes))",
+                message: "Permanently delete \(viewModel.selectedCount) selected items (\(ByteFormatter.format(viewModel.selectedBytes))) to free disk space? This cannot be undone. System files and SIP integrity remain protected.",
+                confirmTitle: "Permanently Delete \(ByteFormatter.format(viewModel.selectedBytes))",
                 isDestructive: true,
                 onConfirm: {
                     showConfirmDialog = false
@@ -138,6 +144,11 @@ public struct SmartScanView: View {
                     showConfirmDialog = false
                 }
             )
+        }
+        .task {
+            if coordinator.consumeSmartScanRequest() {
+                await viewModel.startScan()
+            }
         }
     }
 }

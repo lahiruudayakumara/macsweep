@@ -1,164 +1,244 @@
 import SwiftUI
 
 public struct DeveloperCleanerView: View {
-    @EnvironmentObject private var environment: AppEnvironment
     @StateObject private var viewModel: DeveloperCleanerViewModel
     @State private var showConfirmDialog = false
+
+    private let categories: [CleanupCategory] = [
+        .developerXcode, .developerNode, .developerGradle, .developerHomebrew, .developerDocker
+    ]
 
     public init(environment: AppEnvironment) {
         _viewModel = StateObject(wrappedValue: DeveloperCleanerViewModel(environment: environment))
     }
 
-    private var headerButtonStartsScan: Bool {
-        viewModel.scanResult == nil || viewModel.items.isEmpty || viewModel.lastCleanResult != nil
+    public var body: some View {
+        Group {
+            if viewModel.isScanning {
+                ScanProgressView(
+                    progress: viewModel.currentProgress,
+                    isPaused: viewModel.isPaused,
+                    onPauseResume: viewModel.togglePause,
+                    onStop: viewModel.stopScan
+                )
+            } else if let result = viewModel.lastCleanResult {
+                cleanupSummary(result)
+            } else if viewModel.scanResult == nil {
+                EmptyStateView(
+                    title: "Developer Cleaner",
+                    subtitle: "Find rebuildable Xcode, Node.js, Gradle, and Homebrew files. You review every item before anything is permanently deleted.",
+                    iconName: "hammer.fill",
+                    buttonTitle: "Scan Developer Files",
+                    buttonAction: startScan
+                )
+            } else if viewModel.items.isEmpty {
+                EmptyStateView(
+                    title: "No Developer Clutter Found",
+                    subtitle: "The scan completed without finding any supported developer caches that are safe to present for cleanup.",
+                    iconName: "checkmark.shield.fill",
+                    buttonTitle: "Scan Again",
+                    buttonAction: startScan
+                )
+            } else {
+                resultsView
+            }
+        }
+        .sheet(isPresented: $showConfirmDialog) {
+            ConfirmationDialog(
+                title: "Remove Selected Developer Files?",
+                message: "Permanently delete \(viewModel.selectedCount) selected items (\(ByteFormatter.format(viewModel.selectedBytes)))? This cannot be undone. Rebuildable caches may be downloaded or generated again when their tools next run.",
+                confirmTitle: "Permanently Delete \(ByteFormatter.format(viewModel.selectedBytes))",
+                isDestructive: true,
+                onConfirm: {
+                    showConfirmDialog = false
+                    Task { await viewModel.cleanSelectedCaches() }
+                },
+                onCancel: { showConfirmDialog = false }
+            )
+        }
     }
 
-    public var body: some View {
+    private var resultsView: some View {
         VStack(spacing: 0) {
-            // Header Bar
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Developer Cleaner")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.msLabel)
-                    Text("Clean Xcode DerivedData, Node caches, Gradle builds, Homebrew & Docker data")
+            resultsHeader
+            Divider()
+
+            List {
+                ForEach(categoriesWithItems, id: \.self) { category in
+                    let categoryItems = items(in: category)
+                    Section {
+                        ForEach(categoryItems) { item in
+                            DeveloperToolRow(item: item) {
+                                viewModel.toggleItemSelection(item)
+                            }
+                        }
+                    } header: {
+                        categoryHeader(category, items: categoryItems)
+                    }
+                }
+            }
+            .listStyle(.inset)
+        }
+    }
+
+    private var resultsHeader: some View {
+        VStack(spacing: 14) {
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.msAccent.opacity(0.14))
+                        .frame(width: 42, height: 42)
+                    Image(systemName: "hammer.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.msAccent)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text("Review Developer Files")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.msLabel)
+                        Text("\(ByteFormatter.format(viewModel.totalBytes)) FOUND")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.msSafe)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(Color.msSafe.opacity(0.12), in: Capsule())
+                    }
+                    Text("Select only files you are comfortable regenerating. Approved items are permanently deleted.")
                         .font(.system(size: 12))
                         .foregroundColor(.msSecondaryLabel)
                 }
 
                 Spacer()
 
+                Button(action: startScan) {
+                    Label("Scan Again", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.bordered)
+                .disabled(viewModel.isCleaning)
+
                 PrimaryButton(
-                    title: headerButtonStartsScan ? "Scan Developer Caches" : "Review & Clean \(ByteFormatter.format(viewModel.selectedBytes))",
-                    iconName: headerButtonStartsScan ? "hammer.fill" : "trash.fill",
-                    isLoading: viewModel.isScanning || viewModel.isCleaning
+                    title: "Clean \(ByteFormatter.format(viewModel.selectedBytes))",
+                    iconName: "trash",
+                    isLoading: viewModel.isCleaning
                 ) {
-                    if headerButtonStartsScan {
-                        Task { await viewModel.scanDeveloperCaches() }
-                    } else {
-                        showConfirmDialog = true
-                    }
+                    showConfirmDialog = true
                 }
-                .disabled(!headerButtonStartsScan && viewModel.selectedCount == 0)
+                .disabled(viewModel.selectedCount == 0 || viewModel.isCleaning)
             }
-            .padding(16)
-            .background(Color.msSecondaryBackground)
 
-            Divider()
-
-            if viewModel.isScanning {
-                ScanProgressView(progress: viewModel.currentProgress)
-            } else if let cleanResult = viewModel.lastCleanResult {
-                ScanSummaryView(result: cleanResult) {
-                    Task { await viewModel.scanDeveloperCaches() }
-                }
-            } else if viewModel.scanResult == nil {
-                EmptyStateView(
-                    title: "No Developer Caches Scanned",
-                    subtitle: "Reclaim gigabytes of space trapped in Xcode DerivedData, Gradle build caches, npm/yarn node modules, and Homebrew bottles.",
-                    iconName: "hammer.fill",
-                    buttonTitle: "Scan Developer Caches",
-                    buttonAction: {
-                        Task { await viewModel.scanDeveloperCaches() }
-                    }
-                )
-            } else if viewModel.items.isEmpty {
-                EmptyStateView(
-                    title: "Developer Scan Complete",
-                    subtitle: "No developer caches were found. Nothing was removed, and cleanup always requires your approval.",
-                    iconName: "checkmark.shield.fill",
-                    buttonTitle: "Scan Again",
-                    buttonAction: {
-                        Task { await viewModel.scanDeveloperCaches() }
-                    }
-                )
-            } else {
-                VStack(spacing: 0) {
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Review Developer Cache Results")
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(.msLabel)
-                            Text("Choose what MacSweep may clean. No cache is removed until you approve.")
-                                .font(.system(size: 11))
-                                .foregroundColor(.msSecondaryLabel)
-                        }
-
-                        Spacer()
-
-                        Button("Safe Items Only") {
-                            viewModel.selectSafeOnly()
-                        }
-                        .buttonStyle(.borderless)
-
-                        Button("Select All") {
-                            viewModel.selectAll()
-                        }
-                        .buttonStyle(.borderless)
-
-                        Button("Deselect All") {
-                            viewModel.deselectAll()
-                        }
-                        .buttonStyle(.borderless)
-
-                        Text("\(viewModel.selectedCount) selected • \(ByteFormatter.format(viewModel.selectedBytes))")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.msSecondaryLabel)
-                    }
+            HStack(spacing: 14) {
+                Button("Recommended Only") { viewModel.selectSafeOnly() }
+                Button("Select All") { viewModel.selectAll() }
+                Button("Deselect All") { viewModel.deselectAll() }
+                Spacer()
+                Text("\(viewModel.selectedCount) of \(viewModel.items.count) selected • \(ByteFormatter.format(viewModel.selectedBytes))")
                     .font(.system(size: 11, weight: .medium))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .foregroundColor(.msSecondaryLabel)
+            }
+            .buttonStyle(.borderless)
+            .font(.system(size: 11, weight: .medium))
+        }
+        .padding(16)
+        .background(Color.msSecondaryBackground)
+    }
 
-                    Divider()
+    private var categoriesWithItems: [CleanupCategory] {
+        categories.filter { !items(in: $0).isEmpty }
+    }
 
-                    // Quick Cards Summary
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            let grouped = Dictionary(grouping: viewModel.items, by: \.category)
-                            ForEach(Array(grouped.keys), id: \.self) { category in
-                                let catItems = grouped[category] ?? []
-                                DeveloperCacheCard(
-                                    title: category.displayName,
-                                    subtitle: category.subtitle,
-                                    iconName: category.iconName,
-                                    tintColor: category.tintColor,
-                                    size: catItems.reduce(0) { $0 + $1.size },
-                                    count: catItems.count
-                                )
-                                .frame(width: 220)
-                            }
-                        }
-                        .padding(16)
-                    }
+    private func items(in category: CleanupCategory) -> [CleanupItem] {
+        viewModel.items.filter { $0.category == category }
+    }
 
-                    Divider()
+    private func categoryHeader(_ category: CleanupCategory, items: [CleanupItem]) -> some View {
+        let allSelected = items.allSatisfy(\.isSelected)
+        return HStack(spacing: 8) {
+            Toggle("", isOn: Binding(
+                get: { allSelected },
+                set: { viewModel.setSelection(for: category, isSelected: $0) }
+            ))
+            .labelsHidden()
+            .toggleStyle(.checkbox)
 
-                    // Items List
-                    List {
-                        ForEach(viewModel.items) { item in
-                            DeveloperToolRow(item: item) {
-                                viewModel.toggleItemSelection(item)
-                            }
-                        }
-                    }
-                    .listStyle(.inset)
+            Image(systemName: category.iconName)
+                .foregroundColor(category.tintColor)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(category.displayName)
+                    .font(.system(size: 13, weight: .bold))
+                Text(category.subtitle)
+                    .font(.system(size: 10))
+                    .foregroundColor(.msSecondaryLabel)
+            }
+            Spacer()
+            Text("\(items.count) items • \(ByteFormatter.format(items.reduce(0) { $0 + $1.size }))")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.msSecondaryLabel)
+        }
+    }
+
+    private func cleanupSummary(_ result: CleanResult) -> some View {
+        VStack(spacing: 26) {
+            ZStack {
+                Circle()
+                    .fill((result.isFullSuccess ? Color.msSafe : Color.msCaution).opacity(0.14))
+                    .frame(width: 96, height: 96)
+                Image(systemName: result.isFullSuccess ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                    .font(.system(size: 48, weight: .semibold))
+                    .foregroundColor(result.isFullSuccess ? .msSafe : .msCaution)
+            }
+
+            VStack(spacing: 7) {
+                Text(result.isFullSuccess ? "Developer Cleanup Complete" : "Cleanup Completed with Some Skips")
+                    .font(.system(size: 23, weight: .bold))
+                    .foregroundColor(.msLabel)
+                Text("Permanently removed \(result.formattedReclaimed) from \(result.successCount) developer items.")
+                    .font(.system(size: 14))
+                    .foregroundColor(.msSecondaryLabel)
+                if result.failureCount > 0 {
+                    Text("\(result.failureCount) items could not be removed and were left untouched.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.msCaution)
                 }
             }
-        }
-        .sheet(isPresented: $showConfirmDialog) {
-            ConfirmationDialog(
-                title: "Approve Developer Cache Cleanup?",
-                message: "You are approving the permanent removal of \(viewModel.selectedCount) selected developer cache items (\(ByteFormatter.format(viewModel.selectedBytes))). Review the selection before continuing; project source files remain protected.",
-                confirmTitle: "Approve & Clean \(ByteFormatter.format(viewModel.selectedBytes))",
-                isDestructive: true,
-                onConfirm: {
-                    showConfirmDialog = false
-                    Task { await viewModel.cleanSelectedCaches() }
-                },
-                onCancel: {
-                    showConfirmDialog = false
+
+            HStack(spacing: 14) {
+                summaryMetric("Permanently Removed", value: result.formattedReclaimed, icon: "trash.slash.fill", color: .msSafe)
+                summaryMetric("Cleaned", value: "\(result.successCount)", icon: "checkmark.shield.fill", color: .msAccent)
+                if result.failureCount > 0 {
+                    summaryMetric("Skipped", value: "\(result.failureCount)", icon: "exclamationmark.triangle.fill", color: .msCaution)
                 }
-            )
+            }
+            .frame(maxWidth: 520)
+
+            Button(action: startScan) {
+                Label("Scan Again", systemImage: "arrow.clockwise")
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+            }
+            .buttonStyle(.borderedProminent)
         }
+        .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func summaryMetric(_ title: String, value: String, icon: String, color: Color) -> some View {
+        VStack(spacing: 6) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.msSecondaryLabel)
+            Text(value)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundColor(color)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(14)
+        .background(Color.msSecondaryBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func startScan() {
+        Task { await viewModel.scanDeveloperCaches() }
     }
 }

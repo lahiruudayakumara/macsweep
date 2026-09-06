@@ -9,10 +9,11 @@ public struct TrashScanner: Sendable {
         fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".Trash")
     }
 
-    public func scan(onProgress: (@Sendable (String) -> Void)? = nil) async -> [ScanItem] {
+    public func scan(onProgress: (@Sendable (String) -> Void)? = nil, control: ScanControl? = nil) async -> [ScanItem] {
         var items: [ScanItem] = []
 
         guard fileManager.fileExists(atPath: trashURL.path) else { return items }
+        guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
         onProgress?(trashURL.path)
         Logger.scanner.debug("Scanning Trash directory")
 
@@ -24,7 +25,7 @@ public struct TrashScanner: Sendable {
             )
 
             for itemURL in contents {
-                if Task.isCancelled { return items }
+                guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
                 onProgress?(itemURL.path)
 
                 let values = try? itemURL.resourceValues(forKeys: [.isDirectoryKey])
@@ -32,7 +33,7 @@ public struct TrashScanner: Sendable {
                 let size: Int64
 
                 if isDir {
-                    size = await FileEnumerator.directorySize(itemURL, onProgress: onProgress)
+                    size = await FileEnumerator.directorySize(itemURL, onProgress: onProgress, control: control)
                 } else {
                     let fileValues = try? itemURL.resourceValues(forKeys: [.totalFileAllocatedSizeKey, .fileSizeKey])
                     size = Int64(fileValues?.totalFileAllocatedSize ?? fileValues?.fileSize ?? 0)

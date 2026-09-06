@@ -13,15 +13,16 @@ public struct HomebrewScanner: Sendable {
         ]
     }
 
-    public func scan(onProgress: (@Sendable (String) -> Void)? = nil) async -> [ScanItem] {
+    public func scan(onProgress: (@Sendable (String) -> Void)? = nil, control: ScanControl? = nil) async -> [ScanItem] {
         var items: [ScanItem] = []
 
         for (path, label) in targetPaths {
+            guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { return items }
             guard fileManager.fileExists(atPath: path.path) else { continue }
             onProgress?(path.path)
             Logger.scanner.debug("Scanning Homebrew path: \(label)")
 
-            let size = await FileEnumerator.directorySize(path, onProgress: onProgress)
+            let size = await FileEnumerator.directorySize(path, onProgress: onProgress, control: control)
             guard size > 0 else { continue }
 
             let modDate = (try? path.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? Date.distantPast

@@ -14,6 +14,9 @@
         }
       }
     },
+    "%@ FOUND" : {
+
+    },
     "%@ free" : {
 
     },
@@ -68,12 +71,18 @@
         }
       }
     },
-    "%lld items found (%@)" : {
+    "%lld items could not be removed and were left untouched." : {
+
+    },
+    "%lld items found across system and developer categories" : {
+
+    },
+    "%lld items found so far (%@)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$lld items found (%2$@)"
+            "value" : "%1$lld items found so far (%2$@)"
           }
         }
       }
@@ -83,6 +92,16 @@
     },
     "%lld MB" : {
 
+    },
+    "%lld of %lld categories complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld categories complete"
+          }
+        }
+      }
     },
     "%lld of %lld items processed" : {
       "localizations" : {
@@ -104,12 +123,12 @@
         }
       }
     },
-    "%lld selected • %@" : {
+    "%lld selected • %@ of %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$lld selected • %2$@"
+            "value" : "%1$lld selected • %2$@ of %3$@"
           }
         }
       }
@@ -178,9 +197,6 @@
 
     },
     "Adjust minimum size" : {
-
-    },
-    "Analyzing categories" : {
 
     },
     "App Language" : {
@@ -489,16 +505,16 @@
     "Check Again" : {
 
     },
-    "Choose what MacSweep may clean. No cache is removed until you approve." : {
-
-    },
     "Choose what MacSweep may clean. No files are removed until you approve." : {
 
     },
-    "Clean Xcode DerivedData, Node caches, Gradle builds, Homebrew & Docker data" : {
+    "Cleanable Junk" : {
 
     },
-    "Cleanable Junk" : {
+    "Cleanup Completed with Some Skips" : {
+
+    },
+    "Cleanup tasks will finish silently while the app is in the background." : {
 
     },
     "Cleanup tasks will finish silently while the app is in the background." : {
@@ -530,7 +546,7 @@
     "Deselect All" : {
 
     },
-    "Developer Cleaner" : {
+    "Developer Cleanup Complete" : {
 
     },
     "Distribution" : {
@@ -540,9 +556,6 @@
 
     },
     "Duplicates Finder" : {
-
-    },
-    "Files are being moved to Trash and remain recoverable." : {
 
     },
     "Files are being moved to Trash and remain recoverable." : {
@@ -564,6 +577,9 @@
 
     },
     "Full Disk Access Required for Complete Uninstall" : {
+
+    },
+    "Full Scan Results" : {
 
     },
     "Grant access before uninstalling protected application containers and support files." : {
@@ -918,6 +934,19 @@
     "Original" : {
 
     },
+    "Pause" : {
+
+    },
+    "Permanently removed %@ from %lld developer items." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Permanently removed %1$@ from %2$lld developer items."
+          }
+        }
+      }
+    },
     "Preferences save automatically" : {
 
     },
@@ -928,6 +957,9 @@
 
     },
     "Real-time system health, storage allocation, and maintenance tools" : {
+
+    },
+    "Recommended Only" : {
 
     },
     "Restart MacSweep after changing the language." : {
@@ -1215,7 +1247,10 @@
         }
       }
     },
-    "Review Developer Cache Results" : {
+    "Resume" : {
+
+    },
+    "Review Developer Files" : {
 
     },
     "Review Scan Results" : {
@@ -1225,6 +1260,9 @@
 
     },
     "Scan Again" : {
+
+    },
+    "Scan Paused" : {
 
     },
     "Scanning Mac..." : {
@@ -1237,6 +1275,9 @@
 
     },
     "Select All" : {
+
+    },
+    "Select only files you are comfortable regenerating. Approved items are permanently deleted." : {
 
     },
     "Settings" : {
@@ -1268,6 +1309,9 @@
     "Startup Items" : {
 
     },
+    "Stop" : {
+
+    },
     "Storage Analyzer" : {
 
     },
@@ -1278,9 +1322,6 @@
 
     },
     "System is optimized" : {
-
-    },
-    "System Optimal" : {
 
     },
     "System Storage" : {

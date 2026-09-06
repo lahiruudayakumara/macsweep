@@ -4,6 +4,7 @@ import Combine
 @MainActor
 public final class SmartScanViewModel: ObservableObject {
     @Published public private(set) var isScanning: Bool = false
+    @Published public private(set) var isPaused: Bool = false
     @Published public private(set) var isCleaning: Bool = false
     @Published public private(set) var currentProgress: ScanProgress?
     @Published public private(set) var scanResult: ScanResult?
@@ -12,6 +13,9 @@ public final class SmartScanViewModel: ObservableObject {
     @Published public var lastCleanResult: CleanResult?
 
     private let environment: AppEnvironment
+    private var scanControl: ScanControl?
+    private var scanTask: Task<ScanResult, Never>?
+    private var activeScanID: UUID?
 
     public var selectedBytes: Int64 {
         items.filter(\.isSelected).reduce(0) { $0 + $1.size }
@@ -31,19 +35,30 @@ public final class SmartScanViewModel: ObservableObject {
 
     public func startScan() async {
         guard !isScanning else { return }
+        let scanID = UUID()
+        let control = ScanControl()
+        activeScanID = scanID
+        scanControl = control
         isScanning = true
-        currentProgress = ScanProgress(totalCategoriesCount: 8)
+        isPaused = false
+        currentProgress = ScanProgress(totalCategoriesCount: 3)
         scanResult = nil
         items = []
         lastCleanResult = nil
 
         let startTime = Date()
 
-        let result = await environment.scanEngine.performSmartScan { [weak self] progress in
-            Task { @MainActor in
-                self?.currentProgress = progress
+        let task = Task { [environment, weak self] in
+            await environment.scanEngine.performSmartScan(control: control) { progress in
+                Task { @MainActor in
+                    guard self?.activeScanID == scanID else { return }
+                    self?.currentProgress = progress
+                }
             }
         }
+        scanTask = task
+        let result = await task.value
+        guard activeScanID == scanID, !control.isCancelled else { return }
 
         // Enforce minimum scan pacing (2.5s) so live scanning UI feedback is smooth and visible
         let elapsed = Date().timeIntervalSince(startTime)
@@ -51,10 +66,40 @@ public final class SmartScanViewModel: ObservableObject {
             let delayNano = UInt64((2.5 - elapsed) * 1_000_000_000)
             try? await Task.sleep(nanoseconds: delayNano)
         }
+        guard activeScanID == scanID, !control.isCancelled else { return }
 
         self.scanResult = result
         self.items = result.items
         self.isScanning = false
+        self.isPaused = false
+        self.scanTask = nil
+        self.scanControl = nil
+        self.activeScanID = nil
+    }
+
+    public func togglePause() {
+        guard isScanning, let scanControl else { return }
+        if isPaused {
+            scanControl.resume()
+            isPaused = false
+        } else {
+            scanControl.pause()
+            isPaused = true
+        }
+    }
+
+    public func stopScan() {
+        guard isScanning else { return }
+        scanControl?.cancel()
+        scanTask?.cancel()
+        scanTask = nil
+        scanControl = nil
+        activeScanID = nil
+        isPaused = false
+        isScanning = false
+        currentProgress = nil
+        scanResult = nil
+        items = []
     }
 
     public func selectAll() {

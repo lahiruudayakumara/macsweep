@@ -6,7 +6,7 @@ public struct CleanOperation: Identifiable, Sendable {
     public let item: CleanupItem
     public let method: CleanMethod
 
-    public init(id: UUID = UUID(), item: CleanupItem, method: CleanMethod = .moveToTrash) {
+    public init(id: UUID = UUID(), item: CleanupItem, method: CleanMethod = .permanentDelete) {
         self.id = id
         self.item = item
         self.method = method

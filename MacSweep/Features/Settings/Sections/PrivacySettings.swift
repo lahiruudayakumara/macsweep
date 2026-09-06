@@ -67,9 +67,9 @@ public struct PrivacySettings: View {
                     )
                     Divider().padding(.leading, 33)
                     privacyRow(
-                        icon: "trash.fill",
-                        title: "Recoverable cleanup",
-                        detail: "Supported cleanup actions move items to Trash before permanent deletion."
+                        icon: "trash.slash.fill",
+                        title: "Cleanup behavior",
+                        detail: "Smart Scan, Full Scan, and Developer Cleaner permanently delete only the items you approve. Large Files and App Uninstaller continue to move files to Trash."
                     )
                     Divider().padding(.leading, 33)
                     privacyRow(
