@@ -4,6 +4,7 @@ import Combine
 @MainActor
 public final class DeveloperCleanerViewModel: ObservableObject {
     @Published public private(set) var isScanning: Bool = false
+    @Published public private(set) var isPaused: Bool = false
     @Published public private(set) var isCleaning: Bool = false
     @Published public private(set) var currentProgress: ScanProgress?
     @Published public private(set) var scanResult: ScanResult?
@@ -11,6 +12,9 @@ public final class DeveloperCleanerViewModel: ObservableObject {
     @Published public private(set) var lastCleanResult: CleanResult?
 
     private let environment: AppEnvironment
+    private var scanControl: ScanControl?
+    private var scanTask: Task<ScanResult, Never>?
+    private var activeScanID: UUID?
 
     public var selectedBytes: Int64 {
         items.filter(\.isSelected).reduce(0) { $0 + $1.size }
@@ -30,27 +34,71 @@ public final class DeveloperCleanerViewModel: ObservableObject {
 
     public func scanDeveloperCaches() async {
         guard !isScanning else { return }
+        let scanID = UUID()
+        let control = ScanControl()
+        activeScanID = scanID
+        scanControl = control
         isScanning = true
+        isPaused = false
         currentProgress = ScanProgress(totalCategoriesCount: 5)
         scanResult = nil
         items = []
         lastCleanResult = nil
 
         let startTime = Date()
-        let result = await environment.scanEngine.performDeveloperScan { [weak self] progress in
-            Task { @MainActor in
-                self?.currentProgress = progress
+        let task = Task { [environment, weak self] in
+            await environment.scanEngine.performDeveloperScan(control: control) { progress in
+                Task { @MainActor in
+                    guard self?.activeScanID == scanID else { return }
+                    self?.currentProgress = progress
+                }
             }
         }
+        scanTask = task
+        let result = await task.value
+        guard activeScanID == scanID, !control.isCancelled else { return }
 
         let elapsed = Date().timeIntervalSince(startTime)
         if elapsed < 2.5 {
             try? await Task.sleep(nanoseconds: UInt64((2.5 - elapsed) * 1_000_000_000))
         }
+        guard activeScanID == scanID, !control.isCancelled else { return }
 
         self.scanResult = result
-        self.items = result.items
+        self.items = result.items.map { item in
+            var item = item
+            item.isSelected = item.risk == .safe
+            return item
+        }
         self.isScanning = false
+        self.isPaused = false
+        self.scanTask = nil
+        self.scanControl = nil
+        self.activeScanID = nil
+    }
+
+    public func togglePause() {
+        guard isScanning, let scanControl else { return }
+        if isPaused {
+            scanControl.resume()
+        } else {
+            scanControl.pause()
+        }
+        isPaused.toggle()
+    }
+
+    public func stopScan() {
+        guard isScanning else { return }
+        scanControl?.cancel()
+        scanTask?.cancel()
+        scanTask = nil
+        scanControl = nil
+        activeScanID = nil
+        isPaused = false
+        isScanning = false
+        currentProgress = nil
+        scanResult = nil
+        items = []
     }
 
     public func selectAll() {
@@ -68,6 +116,12 @@ public final class DeveloperCleanerViewModel: ObservableObject {
     public func deselectAll() {
         for index in items.indices {
             items[index].isSelected = false
+        }
+    }
+
+    public func setSelection(for category: CleanupCategory, isSelected: Bool) {
+        for index in items.indices where items[index].category == category {
+            items[index].isSelected = isSelected
         }
     }
 
