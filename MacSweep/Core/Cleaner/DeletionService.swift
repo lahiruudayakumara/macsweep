@@ -10,7 +10,7 @@ public struct DeletionService: Sendable {
         self.safetyValidator = safetyValidator
     }
 
-    /// Safely deletes a file or directory by moving it to Trash.
+    /// Safely and permanently deletes a file or directory.
     /// - Parameter url: The file URL to remove.
     /// - Returns: A `CleanOperationResult` indicating success or failure.
     public func safeDelete(_ url: URL) -> CleanOperationResult {
@@ -34,7 +34,8 @@ public struct DeletionService: Sendable {
         }
 
         do {
-            _ = try TrashService.moveToTrash(url)
+            try FileManager.default.removeItem(at: url)
+            Logger.cleaner.info("Permanently removed: \(url.lastPathComponent, privacy: .public)")
             return CleanOperationResult(url: url, success: true)
         } catch {
             return CleanOperationResult(url: url, success: false, error: error.localizedDescription)
