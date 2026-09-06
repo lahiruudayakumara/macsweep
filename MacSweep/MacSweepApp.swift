@@ -16,5 +16,13 @@ struct MacSweepApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
+        .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") {
+                    environment.updateService.checkForUpdates()
+                }
+                .disabled(!environment.updateService.isConfigured)
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 import SwiftUI
 
 public struct GeneralSettings: View {
+    @EnvironmentObject private var environment: AppEnvironment
     @ObservedObject var viewModel: SettingsViewModel
     @State private var showRestartAlert = false
     @State private var pendingLanguage: AppLanguage? = nil
@@ -37,8 +38,41 @@ public struct GeneralSettings: View {
                         title: "Automatic update checks",
                         detail: "Check for new MacSweep versions in the background",
                         icon: "arrow.down.circle",
-                        isOn: $viewModel.autoCheckUpdates
+                        isOn: Binding(
+                            get: { environment.updateService.automaticallyChecksForUpdates },
+                            set: { environment.updateService.automaticallyChecksForUpdates = $0 }
+                        )
                     )
+
+                    Divider().padding(.leading, 33)
+
+                    SettingsToggleRow(
+                        title: "Automatically download updates",
+                        detail: "Securely download verified updates and install them when MacSweep quits",
+                        icon: "arrow.down.app",
+                        isOn: Binding(
+                            get: { environment.updateService.automaticallyDownloadsUpdates },
+                            set: { environment.updateService.automaticallyDownloadsUpdates = $0 }
+                        )
+                    )
+
+                    Divider().padding(.leading, 33)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Check manually")
+                                .font(.system(size: 12, weight: .medium))
+                            Text("Look for a new signed release now")
+                                .font(.system(size: 10))
+                                .foregroundColor(.msSecondaryLabel)
+                        }
+                        Spacer()
+                        Button("Check Now") {
+                            environment.updateService.checkForUpdates()
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!environment.updateService.isConfigured)
+                    }
                 }
             }
 
