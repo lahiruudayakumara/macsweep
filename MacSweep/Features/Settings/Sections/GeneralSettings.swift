@@ -38,7 +38,7 @@ public struct GeneralSettings: View {
                         title: "Automatic update checks",
                         detail: "Check for new MacSweep versions in the background",
                         icon: "arrow.down.circle",
-                        isOn: Binding(
+                        isOn: Binding<Bool>(
                             get: { environment.updateService.automaticallyChecksForUpdates },
                             set: { environment.updateService.automaticallyChecksForUpdates = $0 }
                         )
@@ -50,7 +50,7 @@ public struct GeneralSettings: View {
                         title: "Automatically download updates",
                         detail: "Securely download verified updates and install them when MacSweep quits",
                         icon: "arrow.down.app",
-                        isOn: Binding(
+                        isOn: Binding<Bool>(
                             get: { environment.updateService.automaticallyDownloadsUpdates },
                             set: { environment.updateService.automaticallyDownloadsUpdates = $0 }
                         )
