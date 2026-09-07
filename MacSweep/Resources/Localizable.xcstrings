@@ -517,7 +517,7 @@
     "Choose what MacSweep may clean. No files are removed until you approve." : {
 
     },
-    "Cleanable Junk" : {
+    "Cleanup tasks will finish silently while the app is in the background." : {
 
     },
     "Cleanup Completed with Some Skips" : {
