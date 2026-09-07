@@ -3,17 +3,104 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
-    runs-on: macos-14
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      RELEASE_VERSION: ${{ github.ref_name }}
+      DEVELOPMENT_TEAM: HT7R9CG7ZN
+      GH_TOKEN: ${{ github.token }}
+      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+      APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+      SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
+      SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+
     steps:
-      - uses: actions/checkout@v7
-      - uses: maxim-lobanov/setup-xcode@v1
+      - name: Check out tagged source
+        uses: actions/checkout@v7
         with:
-          xcode-version: '16'
-      - name: Build & Package
-        run: ./scripts/release.sh
+          fetch-depth: 0
 
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
+      - name: Validate release credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in MACOS_CERTIFICATE MACOS_CERTIFICATE_PASSWORD KEYCHAIN_PASSWORD APPLE_API_KEY_ID APPLE_API_ISSUER_ID APPLE_API_PRIVATE_KEY SPARKLE_PUBLIC_KEY SPARKLE_PRIVATE_KEY; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "Required GitHub secret is missing: $name" >&2
+              exit 1
+            fi
+          done
+
+      - name: Import Developer ID certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          CERTIFICATE_PATH="$RUNNER_TEMP/developer-id.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/macsweep-signing.keychain-db"
+          printf '%s' "$MACOS_CERTIFICATE" | base64 --decode > "$CERTIFICATE_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+
+      - name: Prepare App Store Connect API key
+        shell: bash
+        run: |
+          set -euo pipefail
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+          printf '%s' "$APPLE_API_PRIVATE_KEY" > "$API_KEY_PATH"
+          chmod 600 "$API_KEY_PATH"
+          echo "APPLE_API_KEY_PATH=$API_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Resolve dependencies
+        run: xcodebuild -resolvePackageDependencies -project MacSweep.xcodeproj -scheme MacSweep -clonedSourcePackagesDirPath build/SourcePackages
+
+      - name: Build, sign, notarize, and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          export RELEASE_VERSION="${RELEASE_VERSION#v}"
+          ./scripts/release.sh
+
+      - name: Publish GitHub Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${RELEASE_VERSION#v}"
+          gh release create "$RELEASE_VERSION" \
+            "build/Release/MacSweep-$VERSION.dmg" \
+            "build/Release/MacSweep-$VERSION.zip" \
+            "build/Release/appcast.xml" \
+            "build/Release/SHA256SUMS.txt" \
+            --verify-tag \
+            --title "MacSweep $RELEASE_VERSION" \
+            --notes-file RELEASE_NOTES.md
+
+      - name: Remove temporary signing material
+        if: always()
+        shell: bash
+        run: |
+          security delete-keychain "$RUNNER_TEMP/macsweep-signing.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/developer-id.p12" "$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"

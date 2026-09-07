@@ -1,132 +1,67 @@
-# MacSweep Direct Release & Code Signing Specification
+# MacSweep Release and Automatic Update Guide
 
-**Organization:** OpenCorex  
-**Project:** MacSweep (`opencorex-org/macsweep`)  
-**Distribution Channel:** Direct Download Only (Developer ID Signed & Apple Notarized)  
-**Target Platform:** macOS 14.0+  
+MacSweep is distributed through `opencorex-org/macsweep` as a Developer ID signed and Apple-notarized macOS application. Published releases include a DMG for users and a signed ZIP plus appcast for Sparkle updates.
 
----
+## Release artifacts
 
-## 1. Distribution Architecture
+Every stable release publishes:
 
-MacSweep is distributed exclusively as a **Direct Download** package via OpenCorex GitHub Releases.
+- `MacSweep-<version>.dmg` — notarized drag-to-Applications installer.
+- `MacSweep-<version>.zip` — notarized application update consumed by Sparkle.
+- `appcast.xml` — Sparkle update metadata and EdDSA signature.
+- `SHA256SUMS.txt` — SHA-256 checksums for the DMG and update ZIP.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                   Direct Release Security Standards                    │
-├────────────────────────────────────────────────────────────────────────┤
-│ • Code Signing: Developer ID Application Certificate                   │
-│ • Runtime Security: Hardened Runtime Enabled (`-options runtime`)       │
-│ • Packaging: Branded `.dmg` installer with drag-to-Applications layout │
-│ • Apple Notarization: Verified via `xcrun notarytool`                  │
-│ • Stapling: Embedded ticket via `xcrun stapler staple` for Gatekeeper  │
-└────────────────────────────────────────────────────────────────────────┘
-```
+Installed copies read the stable feed at:
 
----
+`https://github.com/opencorex-org/macsweep/releases/latest/download/appcast.xml`
 
-## 2. Release Automation Pipeline
+## Required GitHub Actions secrets
 
-```
-[ Published Git Tag (v*) ]
-            │
-            ▼
-[ GitHub Actions Triggered: .github/workflows/release.yml ]
-            │
-            ▼
-┌─────────────────────────────────────────┐
-│ Step 1: Compile & Xcode Release Archive │
-│ xcodebuild archive -scheme MacSweep     │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ Step 2: Export Developer ID Signed Build│
-│ xcodebuild -exportArchive               │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ Step 3: Package Custom Disk Image (.dmg)│
-│ ./scripts/create-dmg.sh                 │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ Step 4: Submit to Apple Notary Service  │
-│ ./scripts/notarize.sh submit            │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ Step 5: Staple Ticket & Verify DMG      │
-│ xcrun stapler staple MacSweep.dmg       │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ Step 6: Publish GitHub Release          │
-│ Upload MacSweep.dmg & SHA256 Checksums  │
-└─────────────────────────────────────────┘
-```
+Configure these repository secrets before pushing a release tag:
 
----
+- `MACOS_CERTIFICATE` — base64-encoded Developer ID Application `.p12` file.
+- `MACOS_CERTIFICATE_PASSWORD` — password used when exporting the `.p12` file.
+- `KEYCHAIN_PASSWORD` — a strong temporary CI keychain password.
+- `APPLE_API_KEY_ID` — App Store Connect API key ID for notarization.
+- `APPLE_API_ISSUER_ID` — App Store Connect issuer ID.
+- `APPLE_API_PRIVATE_KEY` — complete contents of the matching `AuthKey_<ID>.p8` file.
+- `SPARKLE_PUBLIC_KEY` — base64 public EdDSA key printed by Sparkle `generate_keys`.
+- `SPARKLE_PRIVATE_KEY` — private EdDSA key exported by `generate_keys -x`.
 
-## 3. Automation Scripts
+Never commit private keys, certificates, or passwords.
 
-### 3.1 DMG Packaging (`scripts/create-dmg.sh`)
+## One-time Sparkle key setup
+
+Use the `generate_keys` executable included with the pinned Sparkle release:
+
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-APP_PATH="build/Export/Direct/MacSweep.app"
-DMG_PATH="build/Release/MacSweep.dmg"
-
-mkdir -p build/Release
-
-create-dmg \
-  --volname "MacSweep Installer" \
-  --background "Distribution/DMG/background.png" \
-  --window-pos 200 120 \
-  --window-size 660 400 \
-  --icon-size 100 \
-  --icon "MacSweep.app" 180 170 \
-  --hide-extension "MacSweep.app" \
-  --app-drop-link 480 170 \
-  "$DMG_PATH" \
-  "$APP_PATH"
+generate_keys
+generate_keys -x sparkle-private-key
 ```
 
-### 3.2 Apple Notarization (`scripts/notarize.sh`)
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
+Store the printed public key as `SPARKLE_PUBLIC_KEY`. Store the contents of `sparkle-private-key` as `SPARKLE_PRIVATE_KEY`, then securely remove the exported local file after confirming the secrets are configured.
 
-DMG_PATH="build/Release/MacSweep.dmg"
+The same Sparkle key must be retained for future releases. Losing it can prevent installed copies from accepting updates.
 
-echo "Submitting $DMG_PATH to Apple Notary Service..."
+## Version policy
 
-xcrun notarytool submit "$DMG_PATH" \
-  --key-id "$NOTARIZATION_KEY_ID" \
-  --issuer "$NOTARIZATION_ISSUER_ID" \
-  --key "$NOTARIZATION_KEY_PATH" \
-  --wait
+- Git tags use semantic versions: `vMAJOR.MINOR.PATCH`.
+- `MARKETING_VERSION` must exactly match the tag without its `v` prefix.
+- `CURRENT_PROJECT_VERSION` must increase for every published build, including rebuilds of the same marketing version.
+- Stable releases are created only from the protected `main` branch.
 
-echo "Stapling notarization ticket..."
-xcrun stapler staple "$DMG_PATH"
+## Publishing a release
 
-echo "Verifying Gatekeeper compliance..."
-spctl --assess --type open --context id=gkb-strict "$DMG_PATH"
-```
+1. Merge the completed and reviewed `dev` changes into `main`.
+2. Confirm the Verify workflow passes on `main`.
+3. Update `MARKETING_VERSION`, `CURRENT_PROJECT_VERSION`, `CHANGELOG.md`, and `RELEASE_NOTES.md`.
+4. Create an annotated tag, for example `git tag -a v1.0.0 -m "Release v1.0.0"`.
+5. Push the tag to the official repository.
+6. The Release workflow builds, signs, notarizes, staples, verifies, packages, signs the Sparkle update, generates the appcast, and publishes the GitHub Release.
+7. Download the published DMG and verify installation on a clean Mac account.
 
----
+The workflow fails before publication if a required secret is absent or any build, signature, notarization, Gatekeeper, packaging, or appcast step fails.
 
-## 4. Release Checklist
+## Future automatic updates
 
-1. [ ] Update version number in `MacSweep.xcodeproj` (`MARKETING_VERSION` and `CURRENT_PROJECT_VERSION`).
-2. [ ] Update `CHANGELOG.md` with release notes and feature highlights.
-3. [ ] Run full local unit test suite: `./scripts/test.sh`.
-4. [ ] Verify SwiftLint compliance: `swiftlint lint`.
-5. [ ] Create signed git tag: `git tag -a v1.0.0 -m "Release v1.0.0"`.
-6. [ ] Push git tag to GitHub: `git push origin v1.0.0`.
-7. [ ] Verify downloaded `.dmg` mounts properly and passes Gatekeeper (`spctl --assess`).
+For `v1.0.1` and later, repeat the same version and tag process. Sparkle checks the stable appcast automatically, compares the incrementing bundle version, verifies the EdDSA update signature and Developer ID identity, then offers or installs the update according to the user’s Settings choices.

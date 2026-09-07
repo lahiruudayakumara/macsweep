@@ -1,49 +1,46 @@
 import Foundation
-import OSLog
+import Combine
+import Sparkle
 
-/// Checks for new versions of MacSweep via the GitHub Releases API.
-public actor UpdateService {
-    public init() {}
+/// Securely checks, downloads, verifies, and installs application updates.
+@MainActor
+public final class UpdateService: ObservableObject {
+    private let controller: SPUStandardUpdaterController
+    public let isConfigured: Bool
 
-    /// Checks for a newer release on GitHub.
-    public func checkForUpdate() async -> UpdateInfo? {
-        guard let url = URL(string: "https://api.github.com/repos/opencorex-org/macsweep/releases/latest") else { return nil }
+    public init() {
+        let publicKey = Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String
+        let configured = !(publicKey?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        isConfigured = configured
+        controller = SPUStandardUpdaterController(
+            startingUpdater: configured,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+    }
 
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
-
-            let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-            guard release.tagName.trimmingCharacters(in: CharacterSet(charactersIn: "v")) != currentVersion else {
-                return nil
-            }
-
-            return UpdateInfo(
-                version: release.tagName,
-                releaseURL: release.htmlURL,
-                releaseNotes: release.body
-            )
-        } catch {
-            Logger.app.debug("Update check failed: \(error.localizedDescription)")
-            return nil
+    public var automaticallyChecksForUpdates: Bool {
+        get { controller.updater.automaticallyChecksForUpdates }
+        set {
+            objectWillChange.send()
+            controller.updater.automaticallyChecksForUpdates = newValue
         }
     }
-}
 
-public struct UpdateInfo: Sendable {
-    public let version: String
-    public let releaseURL: String
-    public let releaseNotes: String?
-}
+    public var automaticallyDownloadsUpdates: Bool {
+        get { controller.updater.automaticallyDownloadsUpdates }
+        set {
+            objectWillChange.send()
+            controller.updater.automaticallyDownloadsUpdates = newValue
+        }
+    }
 
-private struct GitHubRelease: Decodable {
-    let tagName: String
-    let htmlURL: String
-    let body: String?
+    public var canCheckForUpdates: Bool {
+        isConfigured && controller.updater.canCheckForUpdates
+    }
 
-    enum CodingKeys: String, CodingKey {
-        case tagName = "tag_name"
-        case htmlURL = "html_url"
-        case body
+    public func checkForUpdates() {
+        guard isConfigured else { return }
+        controller.checkForUpdates(nil)
     }
 }

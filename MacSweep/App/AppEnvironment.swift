@@ -19,6 +19,7 @@ public final class AppEnvironment: ObservableObject {
     // MARK: - Feature Services
     public let largeFileService: LargeFileService
     public let applicationService: ApplicationService
+    public let updateService: UpdateService
 
     public init() {
         self.diskSpaceService = DiskSpaceService()
@@ -29,5 +30,6 @@ public final class AppEnvironment: ObservableObject {
         self.cleanEngine = CleanEngine(safetyValidator: safetyValidator)
         self.largeFileService = LargeFileService()
         self.applicationService = ApplicationService()
+        self.updateService = UpdateService()
     }
 }

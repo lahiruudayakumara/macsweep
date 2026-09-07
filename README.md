@@ -25,7 +25,8 @@
 * **Large File Finder:** Discover large files over configurable thresholds (500 MB to 10 GB+).
 * **Safe Duplicate Detection:** Multi-stage content hash engine for discovering duplicate copies safely.
 * **App Uninstaller:** Complete leftover file discovery for uninstalled applications.
-* **Safety First:** Hardcoded system safeguards, symlink resolution, zero automated background deletions, and explicit Trash relocation.
+* **Safety First:** Hardcoded system safeguards, symlink resolution, explicit review, and confirmation before cleanup.
+* **Secure Updates:** Signed automatic updates using Sparkle, Apple Developer ID, and notarized release artifacts.
 * **Privacy First:** 100% local scanning, zero telemetry, zero analytics tracking, zero cloud server uploads.
 
 ---
@@ -56,12 +57,12 @@ Select the `MacSweep` scheme in Xcode and press `Cmd + R`.
 MacSweep decouples file discovery from deletion:
 
 ```
-[ Scanner Engine ] ──▶ [ Safety Validator ] ──▶ [ User Review ] ──▶ [ Trash Service ]
+[ Scanner Engine ] ──▶ [ Safety Validator ] ──▶ [ User Review ] ──▶ [ Confirmed Cleanup ]
 ```
 
 * **Scanner:** Read-only path enumerator. Cannot delete files.
 * **Safety Validator:** Validates candidate paths against system boundaries (`/System`, `/usr`, `/Library/Keychains`) and verifies canonical symlinks.
-* **Trash Service:** Moves approved files to the macOS Trash using native `FileManager` APIs.
+* **Cleanup Engine:** Permanently removes approved cleaner items. Large Files and App Uninstaller remain recoverable through the macOS Trash.
 
 For full technical documentation, see [`docs/architecture.md`](docs/architecture.md) and [`docs/permissions.md`](docs/permissions.md).
 

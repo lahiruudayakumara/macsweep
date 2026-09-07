@@ -505,16 +505,22 @@
     "Check Again" : {
 
     },
+    "Check for Updates…" : {
+
+    },
+    "Check manually" : {
+
+    },
+    "Check Now" : {
+
+    },
     "Choose what MacSweep may clean. No files are removed until you approve." : {
 
     },
-    "Cleanable Junk" : {
+    "Cleanup tasks will finish silently while the app is in the background." : {
 
     },
     "Cleanup Completed with Some Skips" : {
-
-    },
-    "Cleanup tasks will finish silently while the app is in the background." : {
 
     },
     "Cleanup tasks will finish silently while the app is in the background." : {
@@ -740,6 +746,9 @@
 
     },
     "Loading" : {
+
+    },
+    "Look for a new signed release now" : {
 
     },
     "Mac Storage Optimized!" : {
