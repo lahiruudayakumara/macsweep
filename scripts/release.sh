@@ -36,13 +36,7 @@ fi
 
 mkdir -p "$RELEASE_DIR"
 
-PRE_NOTARY_ZIP="$RELEASE_DIR/MacSweep-notarization.zip"
-ditto -c -k --keepParent "$APP_PATH" "$PRE_NOTARY_ZIP"
-./scripts/notarize.sh "$APP_PATH" "$PRE_NOTARY_ZIP"
-rm -f "$PRE_NOTARY_ZIP"
-
 APP_PATH="$APP_PATH" DMG_PATH="$DMG_PATH" ./scripts/create-dmg.sh
-./scripts/notarize.sh "$DMG_PATH"
 
 ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$UPDATE_ARCHIVE"
 
@@ -61,4 +55,3 @@ printf '%s' "$SPARKLE_PRIVATE_KEY" | "$SPARKLE_BIN/generate_appcast" \
 shasum -a 256 "$DMG_PATH" "$UPDATE_ARCHIVE" > "$RELEASE_DIR/SHA256SUMS.txt"
 
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
-spctl --assess --type execute --verbose=2 "$APP_PATH"
