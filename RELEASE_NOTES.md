@@ -9,7 +9,9 @@ MacSweep 1.0.0 is the first production release of the privacy-first macOS cleani
 - Developer Cleaner for supported Xcode, Node.js, Gradle, and Homebrew caches.
 - Safety validation and explicit review before cleanup.
 - Permanent removal for approved cleanup items, with recoverable Trash behavior retained for Large Files and App Uninstaller.
-- Secure automatic updates powered by Sparkle, Developer ID signing, and Apple notarization.
+- Secure automatic updates signed with Sparkle EdDSA keys.
+
+> MacSweep is an open-source, ad-hoc-signed build and is not Apple-notarized. On first launch, Control-click MacSweep, choose **Open**, then confirm **Open**.
 
 ## Requirements
 

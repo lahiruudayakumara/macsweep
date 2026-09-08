@@ -4,6 +4,11 @@ set -euo pipefail
 : "${RELEASE_VERSION:?RELEASE_VERSION is required, for example 1.0.0}"
 : "${SPARKLE_PRIVATE_KEY:?SPARKLE_PRIVATE_KEY is required}"
 
+if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "RELEASE_VERSION must use MAJOR.MINOR.PATCH format" >&2
+  exit 1
+fi
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RELEASE_DIR="$ROOT_DIR/build/Release"
 APP_PATH="$ROOT_DIR/build/Export/MacSweep.app"
@@ -36,13 +41,7 @@ fi
 
 mkdir -p "$RELEASE_DIR"
 
-PRE_NOTARY_ZIP="$RELEASE_DIR/MacSweep-notarization.zip"
-ditto -c -k --keepParent "$APP_PATH" "$PRE_NOTARY_ZIP"
-./scripts/notarize.sh "$APP_PATH" "$PRE_NOTARY_ZIP"
-rm -f "$PRE_NOTARY_ZIP"
-
 APP_PATH="$APP_PATH" DMG_PATH="$DMG_PATH" ./scripts/create-dmg.sh
-./scripts/notarize.sh "$DMG_PATH"
 
 ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$UPDATE_ARCHIVE"
 
@@ -61,4 +60,3 @@ printf '%s' "$SPARKLE_PRIVATE_KEY" | "$SPARKLE_BIN/generate_appcast" \
 shasum -a 256 "$DMG_PATH" "$UPDATE_ARCHIVE" > "$RELEASE_DIR/SHA256SUMS.txt"
 
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
-spctl --assess --type execute --verbose=2 "$APP_PATH"

@@ -9,7 +9,7 @@ All notable changes to MacSweep are documented here.
 - Smart Scan, Full Scan, and Developer Cleaner workflows.
 - Pause, Resume, and Stop controls for active scans.
 - Secure Sparkle-based automatic update support.
-- Developer ID signing, Apple notarization, DMG packaging, checksums, and GitHub Release automation.
+- Ad-hoc application signing, DMG packaging, checksums, and GitHub Release automation without a paid Apple account.
 
 ### Changed
 
@@ -18,5 +18,5 @@ All notable changes to MacSweep are documented here.
 
 ### Security
 
-- Update archives require an EdDSA signature and Developer ID validation.
-- Release publication fails if signing, notarization, verification, or packaging fails.
+- Update archives require a valid Sparkle EdDSA signature.
+- Release publication fails if update signing, application verification, or packaging fails.

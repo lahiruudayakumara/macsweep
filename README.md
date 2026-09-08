@@ -26,21 +26,22 @@
 * **Safe Duplicate Detection:** Multi-stage content hash engine for discovering duplicate copies safely.
 * **App Uninstaller:** Complete leftover file discovery for uninstalled applications.
 * **Safety First:** Hardcoded system safeguards, symlink resolution, explicit review, and confirmation before cleanup.
-* **Secure Updates:** Signed automatic updates using Sparkle, Apple Developer ID, and notarized release artifacts.
+* **Secure Updates:** Automatic updates signed with a dedicated Sparkle EdDSA key.
 * **Privacy First:** 100% local scanning, zero telemetry, zero analytics tracking, zero cloud server uploads.
 
 ---
 
 ## Installation & Distribution
 
-MacSweep is distributed as a **Direct Download** package signed with Apple Developer ID certificates and notarized by Apple.
+MacSweep is distributed as an open-source **Direct Download** package through GitHub Releases. Current packages use an ad-hoc signature and are not Apple-notarized.
 
 ### Direct Download
-Download the latest Developer ID signed and Apple-notarized `.dmg` installer from [GitHub Releases](https://github.com/opencorex-org/macsweep/releases).
+Download the latest `.dmg` installer from [GitHub Releases](https://github.com/opencorex-org/macsweep/releases).
 
 1. Download `MacSweep.dmg`.
 2. Open the DMG file and drag **MacSweep** into your `Applications` folder.
-3. Launch MacSweep and grant Full Disk Access when prompted.
+3. The first time you launch it, Control-click MacSweep, choose **Open**, then confirm **Open**.
+4. Grant Full Disk Access when prompted.
 
 ### Building From Source
 ```bash
