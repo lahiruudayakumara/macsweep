@@ -7,16 +7,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-$ROOT_DIR/build/DerivedData}"
 EXPORT_PATH="${EXPORT_PATH:-$ROOT_DIR/build/Export}"
 PACKAGE_PATH="${PACKAGE_PATH:-$ROOT_DIR/build/SourcePackages}"
-RELEASE_BUILD_NUMBER="${RELEASE_BUILD_NUMBER:-}"
-
-BUILD_NUMBER_ARGS=()
-if [[ -n "$RELEASE_BUILD_NUMBER" ]]; then
-  if [[ ! "$RELEASE_BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
-    echo "RELEASE_BUILD_NUMBER must be a positive integer" >&2
-    exit 1
-  fi
-  BUILD_NUMBER_ARGS+=(CURRENT_PROJECT_VERSION="$RELEASE_BUILD_NUMBER")
-fi
 
 cd "$ROOT_DIR"
 xcodebuild \
@@ -30,8 +20,7 @@ xcodebuild \
   CODE_SIGNING_REQUIRED=NO \
   CODE_SIGNING_ALLOWED=NO \
   SPARKLE_PUBLIC_KEY="$SPARKLE_PUBLIC_KEY" \
-  "${BUILD_NUMBER_ARGS[@]}" \
-  build
+  archive
 
 BUILT_APP="$DERIVED_DATA_PATH/Build/Products/Release/MacSweep.app"
 APP_PATH="$EXPORT_PATH/MacSweep.app"

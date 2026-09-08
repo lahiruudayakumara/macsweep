@@ -41,18 +41,18 @@ The same Sparkle key must be retained for future releases. Losing it can prevent
 
 - Git tags use semantic versions: `vMAJOR.MINOR.PATCH`.
 - `MARKETING_VERSION` must exactly match the tag without its `v` prefix.
-- GitHub Actions assigns `CURRENT_PROJECT_VERSION` from the workflow run number so every published build has a newer update version.
+- `CURRENT_PROJECT_VERSION` must increase for every published build, including rebuilds of the same marketing version.
 - Stable releases are created only from the protected `main` branch.
 
 ## Publishing a release
 
 1. Merge the completed and reviewed `dev` changes into `main`.
 2. Confirm the Verify workflow passes on `main`.
-3. Update `MARKETING_VERSION`, `CHANGELOG.md`, and `RELEASE_NOTES.md`. GitHub Actions supplies the build number.
+3. Update `MARKETING_VERSION`, `CURRENT_PROJECT_VERSION`, `CHANGELOG.md`, and `RELEASE_NOTES.md`.
 4. Create an annotated tag, for example `git tag -a v1.0.0 -m "Release v1.0.0"`.
 5. Push the tag to the official repository.
-6. The Release workflow builds, applies an ad-hoc signature, packages the app, signs the Sparkle update, generates the appcast, uploads a draft, and publishes it after every step succeeds.
-7. Download the published DMG and verify installation on a clean Mac account. Because the app is not notarized, Control-click it and choose **Open** on first launch.
+6. The Release workflow builds, signs, notarizes, staples, verifies, packages, signs the Sparkle update, generates the appcast, and publishes the GitHub Release.
+7. Download the published DMG and verify installation on a clean Mac account.
 
 The workflow fails before publication if a required Sparkle secret is absent or any build, ad-hoc signature, packaging, or appcast step fails.
 
