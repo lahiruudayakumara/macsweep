@@ -20,9 +20,12 @@ xcodebuild \
   CODE_SIGNING_REQUIRED=NO \
   CODE_SIGNING_ALLOWED=NO \
   SPARKLE_PUBLIC_KEY="$SPARKLE_PUBLIC_KEY" \
-  archive
+  build
 
 BUILT_APP="$DERIVED_DATA_PATH/Build/Products/Release/MacSweep.app"
+if [[ ! -d "$BUILT_APP" ]]; then
+  BUILT_APP="$(find "$DERIVED_DATA_PATH" -name "MacSweep.app" -type d | head -n 1)"
+fi
 APP_PATH="$EXPORT_PATH/MacSweep.app"
 test -d "$BUILT_APP"
 mkdir -p "$EXPORT_PATH"
