@@ -2,6 +2,20 @@
 
 All notable changes to MacSweep are documented here.
 
+## [1.1.0] - 2026-09-27
+
+### Added
+
+- App Mover: Relocate applications and associated data to external drives with symlink management.
+- Storage Manager: View and manage storage across internal and connected external volumes.
+- Real-time cleaning progress overlay with item paths, count, and reclaimed bytes indicator.
+- Helper install script (`scripts/install.sh`) to easily copy MacSweep to `/Applications` and strip quarantine flags.
+
+### Changed
+
+- Updated About screen to display the application version cleanly without the build count.
+- Release and archive scripts automatically clear quarantine attributes from packaged artifacts.
+
 ## [1.0.0] - 2026-09-06
 
 ### Added

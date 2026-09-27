@@ -32,14 +32,12 @@ public struct AboutSettings: View {
 
             SettingsCard(
                 title: "Application",
-                subtitle: "Build and compatibility information",
+                subtitle: "Version and compatibility information",
                 icon: "desktopcomputer",
                 tint: .blue
             ) {
                 VStack(spacing: 12) {
                     infoRow(title: "Version", value: shortVersion)
-                    Divider()
-                    infoRow(title: "Build", value: buildNumber)
                     Divider()
                     infoRow(title: "Minimum macOS", value: "14.0 Sonoma")
                 }
@@ -54,11 +52,7 @@ public struct AboutSettings: View {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
     }
 
-    private var buildNumber: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
-    }
-
-    private var versionText: String { "Version \(shortVersion) (\(buildNumber))" }
+    private var versionText: String { "Version \(shortVersion)" }
 
     private func infoRow(title: String, value: String) -> some View {
         HStack {
