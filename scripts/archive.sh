@@ -43,3 +43,6 @@ APP_INFO_PLIST="$APP_PATH/Contents/Info.plist"
 
 codesign --force --deep --sign - --timestamp=none "$APP_PATH"
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
+# Remove quarantine attribute so the app opens without Gatekeeper warnings
+xattr -cr "$APP_PATH"

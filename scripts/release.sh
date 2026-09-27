@@ -55,3 +55,8 @@ printf '%s' "$SPARKLE_PRIVATE_KEY" | "$SPARKLE_BIN/generate_appcast" \
 shasum -a 256 "$DMG_PATH" "$UPDATE_ARCHIVE" > "$RELEASE_DIR/SHA256SUMS.txt"
 
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
+# Remove quarantine attributes from release artifacts
+xattr -cr "$APP_PATH"
+xattr -cr "$DMG_PATH"
+xattr -cr "$UPDATE_ARCHIVE"
