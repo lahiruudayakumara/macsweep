@@ -32,6 +32,10 @@ public struct ContentView: View {
                     UninstallerView(environment: environment)
                 case .privacy:
                     PrivacyView()
+                case .appMover:
+                    AppMoverView(environment: environment)
+                case .storageManager:
+                    StorageManagerView(environment: environment)
                 case .settings:
                     SettingsView()
                 }

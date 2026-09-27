@@ -4,6 +4,19 @@
     "" : {
 
     },
+    "· %@ ·" : {
+
+    },
+    "%@  of  %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@  of  %2$@"
+          }
+        }
+      }
+    },
     "%@ — %@" : {
       "localizations" : {
         "en" : {
@@ -14,6 +27,19 @@
         }
       }
     },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ available" : {
+
+    },
     "%@ FOUND" : {
 
     },
@@ -22,6 +48,36 @@
     },
     "%@ Free" : {
 
+    },
+    "%@ free • %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ free • %2$@"
+          }
+        }
+      }
+    },
+    "%@ free of %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ free of %2$@"
+          }
+        }
+      }
+    },
+    "%@ only has %@ free. This item needs %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ only has %2$@ free. This item needs %3$@."
+          }
+        }
+      }
     },
     "%@ Reclaimable" : {
 
@@ -71,6 +127,16 @@
         }
       }
     },
+    "%lld items • %@ movable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld items • %2$@ movable"
+          }
+        }
+      }
+    },
     "%lld items could not be removed and were left untouched." : {
 
     },
@@ -99,6 +165,36 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld of %2$lld categories complete"
+          }
+        }
+      }
+    },
+    "%lld of %lld checked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld checked"
+          }
+        }
+      }
+    },
+    "%lld of %lld items" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld items"
+          }
+        }
+      }
+    },
+    "%lld of %lld items checked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld items checked"
           }
         }
       }
@@ -159,6 +255,12 @@
     "%lld%% of folders completed" : {
 
     },
+    "%lld%% of volume" : {
+
+    },
+    "%lld%% used" : {
+
+    },
     "• %@: %@" : {
       "localizations" : {
         "en" : {
@@ -168,6 +270,12 @@
           }
         }
       }
+    },
+    "• %lld parts" : {
+
+    },
+    "→ %@" : {
+
     },
     "> 1 GB" : {
 
@@ -197,6 +305,15 @@
 
     },
     "Adjust minimum size" : {
+
+    },
+    "All (%lld)" : {
+
+    },
+    "All components above will be moved to external storage and symlinked transparently." : {
+
+    },
+    "App Components & Associated Data" : {
 
     },
     "App Language" : {
@@ -341,6 +458,9 @@
           }
         }
       }
+    },
+    "App Mover" : {
+
     },
     "App Uninstaller" : {
 
@@ -493,7 +613,16 @@
         }
       }
     },
+    "Apps (%lld)" : {
+
+    },
     "Auto Select" : {
+
+    },
+    "Calculating folder sizes…" : {
+
+    },
+    "Calculating Footprint" : {
 
     },
     "Cancel" : {
@@ -514,10 +643,13 @@
     "Check Now" : {
 
     },
+    "Choose Destination Drive" : {
+
+    },
     "Choose what MacSweep may clean. No files are removed until you approve." : {
 
     },
-    "Cleanup tasks will finish silently while the app is in the background." : {
+    "Cleanable Junk" : {
 
     },
     "Cleanup Completed with Some Skips" : {
@@ -538,6 +670,9 @@
     "Could Not Move" : {
 
     },
+    "Currently on External Drive" : {
+
+    },
     "Dashboard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -549,6 +684,9 @@
         }
       }
     },
+    "Data (%lld)" : {
+
+    },
     "Deselect All" : {
 
     },
@@ -558,10 +696,16 @@
     "Distribution" : {
 
     },
+    "Do not disconnect the external drive during the transfer." : {
+
+    },
     "Done" : {
 
     },
     "Duplicates Finder" : {
+
+    },
+    "External" : {
 
     },
     "Files are being moved to Trash and remain recoverable." : {
@@ -570,10 +714,19 @@
     "Files safely processed. System integrity & SIP fully preserved." : {
 
     },
+    "Filter" : {
+
+    },
     "Find and remove identical file copies across folders" : {
 
     },
     "Find, inspect, and safely manage files consuming substantial disk space" : {
+
+    },
+    "Found so far:" : {
+
+    },
+    "Full App Move to External Applications" : {
 
     },
     "Full Disk Access Recommended" : {
@@ -592,6 +745,9 @@
 
     },
     "Installed Files & Leftovers" : {
+
+    },
+    "Internal" : {
 
     },
     "Keep Newest (Select Older)" : {
@@ -749,6 +905,9 @@
 
     },
     "Look for a new signed release now" : {
+
+    },
+    "Looking for applications and data folders…" : {
 
     },
     "Mac Storage Optimized!" : {
@@ -925,6 +1084,31 @@
     "Minimum file size" : {
 
     },
+    "Move Complete!" : {
+
+    },
+    "Move Failed" : {
+
+    },
+    "Moved %@ to external drive.\nA symbolic link was created — %@ will work normally." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Moved %1$@ to external drive.\nA symbolic link was created — %2$@ will work normally."
+          }
+        }
+      }
+    },
+    "No readable contents found" : {
+
+    },
+    "No writable external drives found. Connect a drive and click Rescan." : {
+
+    },
+    "Not enough space" : {
+
+    },
     "Notifications are enabled" : {
 
     },
@@ -959,6 +1143,12 @@
     "Preferences save automatically" : {
 
     },
+    "Preparing scan…" : {
+
+    },
+    "Preparing…" : {
+
+    },
     "Privacy Cleaner" : {
 
     },
@@ -968,7 +1158,23 @@
     "Real-time system health, storage allocation, and maintenance tools" : {
 
     },
+    "Reclaimed %@ of %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reclaimed %1$@ of %2$@"
+          }
+        }
+      }
+    },
     "Recommended Only" : {
+
+    },
+    "Refresh volumes" : {
+
+    },
+    "Rescan applications and folders" : {
 
     },
     "Restart MacSweep after changing the language." : {
@@ -1256,6 +1462,9 @@
         }
       }
     },
+    "Restore to Internal Drive" : {
+
+    },
     "Resume" : {
 
     },
@@ -1274,7 +1483,19 @@
     "Scan Paused" : {
 
     },
+    "Scanning Applications & Folders…" : {
+
+    },
+    "Scanning calculates full app bundle and associated data folder sizes. Results stream live." : {
+
+    },
     "Scanning Mac..." : {
+
+    },
+    "Scanning volumes…" : {
+
+    },
+    "Search apps or folders…" : {
 
     },
     "Search apps..." : {
@@ -1283,7 +1504,13 @@
     "Searching for Files Above %lld MB" : {
 
     },
+    "Select a volume" : {
+
+    },
     "Select All" : {
+
+    },
+    "Select an app or folder on the left" : {
 
     },
     "Select only files you are comfortable regenerating. Approved items are permanently deleted." : {
@@ -1296,6 +1523,9 @@
 
     },
     "Show in Finder" : {
+
+    },
+    "SIP integrity protected • System and critical files remain completely safe" : {
 
     },
     "Smaller files are excluded from Large Files scans" : {
@@ -1315,6 +1545,9 @@
     "Some caches, app containers, logs, and files will be inaccessible." : {
 
     },
+    "Starting up…" : {
+
+    },
     "Startup Items" : {
 
     },
@@ -1323,6 +1556,16 @@
     },
     "Storage Analyzer" : {
 
+    },
+    "Successfully moved %@ and its data (%@) to external drive.\nSymbolic links were created — %@ will work normally from the external drive." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Successfully moved %1$@ and its data (%2$@) to external drive.\nSymbolic links were created — %3$@ will work normally from the external drive."
+          }
+        }
+      }
     },
     "Successfully reclaimed %@ of disk space" : {
 
@@ -1376,10 +1619,16 @@
     "Visual disk space breakdown" : {
 
     },
+    "Volumes" : {
+
+    },
     "Wasted %@" : {
 
     },
     "Welcome to MacSweep" : {
+
+    },
+    "Will be placed in MacSweep folder" : {
 
     },
     "Without access, macOS may skip protected folders and results can be incomplete." : {

@@ -20,6 +20,8 @@ public enum NavigationItem: String, CaseIterable, Identifiable, Hashable, Sendab
     case startupItems
     case uninstaller
     case privacy
+    case appMover
+    case storageManager
     case settings
 
     public var id: String { rawValue }
@@ -36,6 +38,8 @@ public enum NavigationItem: String, CaseIterable, Identifiable, Hashable, Sendab
         case .startupItems: return "Startup Items"
         case .uninstaller: return "App Uninstaller"
         case .privacy: return "Privacy Cleaner"
+        case .appMover: return "App Mover"
+        case .storageManager: return "Storage Manager"
         case .settings: return "Settings"
         }
     }
@@ -52,6 +56,8 @@ public enum NavigationItem: String, CaseIterable, Identifiable, Hashable, Sendab
         case .startupItems: return "bolt.fill"
         case .uninstaller: return "trash.square.fill"
         case .privacy: return "hand.raised.fill"
+        case .appMover: return "externaldrive.badge.plus"
+        case .storageManager: return "externaldrive.fill"
         case .settings: return "gearshape.fill"
         }
     }
@@ -60,7 +66,7 @@ public enum NavigationItem: String, CaseIterable, Identifiable, Hashable, Sendab
         switch self {
         case .dashboard: return .overview
         case .fullScan, .smartScan, .developerCleaner, .privacy: return .cleanup
-        case .storageAnalyzer, .duplicates, .largeFiles, .startupItems, .uninstaller: return .tools
+        case .storageAnalyzer, .duplicates, .largeFiles, .startupItems, .uninstaller, .appMover, .storageManager: return .tools
         case .settings: return .preferences
         }
     }
