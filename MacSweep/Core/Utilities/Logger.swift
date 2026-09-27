@@ -25,4 +25,10 @@ public extension Logger {
 
     /// File system enumeration and metadata operations
     static let fileSystem = Logger(subsystem: subsystem, category: "FileSystem")
+
+    /// App folder move and symlink operations
+    static let mover = Logger(subsystem: subsystem, category: "AppMover")
+
+    /// External volume discovery and management
+    static let volumes = Logger(subsystem: subsystem, category: "Volumes")
 }
