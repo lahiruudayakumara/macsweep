@@ -20,7 +20,7 @@ public struct FileEnumerator: Sendable {
             Task.detached(priority: .userInitiated) {
                 let fileManager = FileManager.default
 
-                var options: FileManager.DirectoryEnumerationOptions = [.producesRelativePathURLs]
+                var options: FileManager.DirectoryEnumerationOptions = []
                 if !includeHidden {
                     options.insert(.skipsHiddenFiles)
                 }
@@ -74,7 +74,7 @@ public struct FileEnumerator: Sendable {
         var totalSize: Int64 = 0
         var count = 0
 
-        for await metadata in enumerate(directory: url, includeHidden: true, control: control) {
+        for await metadata in enumerate(directory: url, includeHidden: true, skipPackageDescendants: false, control: control) {
             guard await control?.waitUntilRunnable() ?? !Task.isCancelled else { break }
             if !metadata.isDirectory {
                 totalSize += metadata.size

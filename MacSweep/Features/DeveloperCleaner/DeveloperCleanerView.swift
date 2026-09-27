@@ -21,6 +21,12 @@ public struct DeveloperCleanerView: View {
                     onPauseResume: viewModel.togglePause,
                     onStop: viewModel.stopScan
                 )
+            } else if viewModel.isCleaning {
+                CleaningProgressView(
+                    progress: viewModel.cleanProgress,
+                    title: "Cleaning Developer Artifacts",
+                    subtitle: "Reclaiming space from Xcode, build caches, and developer tools…"
+                )
             } else if let result = viewModel.lastCleanResult {
                 cleanupSummary(result)
             } else if viewModel.scanResult == nil {

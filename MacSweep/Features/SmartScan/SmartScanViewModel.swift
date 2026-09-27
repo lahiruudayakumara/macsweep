@@ -6,6 +6,7 @@ public final class SmartScanViewModel: ObservableObject {
     @Published public private(set) var isScanning: Bool = false
     @Published public private(set) var isPaused: Bool = false
     @Published public private(set) var isCleaning: Bool = false
+    @Published public private(set) var cleanProgress: CleanProgress?
     @Published public private(set) var currentProgress: ScanProgress?
     @Published public private(set) var scanResult: ScanResult?
     @Published public var items: [CleanupItem] = []
@@ -136,13 +137,30 @@ public final class SmartScanViewModel: ObservableObject {
         guard !isCleaning else { return }
         isCleaning = true
         let selectedItems = items.filter(\.isSelected)
-        let cleanResult = await environment.cleanEngine.clean(items: selectedItems)
+        let totalSelectedBytes = selectedItems.reduce(0) { $0 + $1.size }
+
+        cleanProgress = CleanProgress(
+            currentItemName: selectedItems.first?.displayName ?? "Preparing cleanup…",
+            currentItemPath: selectedItems.first?.url.path ?? "",
+            currentCategory: selectedItems.first?.category,
+            completedItemsCount: 0,
+            totalItemsCount: selectedItems.count,
+            bytesReclaimed: 0,
+            totalBytes: totalSelectedBytes
+        )
+
+        let cleanResult = await environment.cleanEngine.clean(items: selectedItems) { [weak self] progress in
+            Task { @MainActor in
+                self?.cleanProgress = progress
+            }
+        }
         self.lastCleanResult = cleanResult
 
         // Remove cleaned items from local state
         self.items.removeAll { item in
             item.isSelected && !cleanResult.failures.contains(where: { $0.url == item.url })
         }
+        self.cleanProgress = nil
         self.isCleaning = false
     }
 }

@@ -19,6 +19,12 @@ public struct SmartScanView: View {
                     onPauseResume: viewModel.togglePause,
                     onStop: viewModel.stopScan
                 )
+            } else if viewModel.isCleaning {
+                CleaningProgressView(
+                    progress: viewModel.cleanProgress,
+                    title: "Cleaning Smart Scan Items",
+                    subtitle: "Safely removing system caches, logs, and user trash…"
+                )
             } else if let cleanResult = viewModel.lastCleanResult {
                 ScanSummaryView(result: cleanResult) {
                     Task { await viewModel.startScan() }

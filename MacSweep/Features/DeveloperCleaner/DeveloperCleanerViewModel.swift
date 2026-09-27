@@ -6,6 +6,7 @@ public final class DeveloperCleanerViewModel: ObservableObject {
     @Published public private(set) var isScanning: Bool = false
     @Published public private(set) var isPaused: Bool = false
     @Published public private(set) var isCleaning: Bool = false
+    @Published public private(set) var cleanProgress: CleanProgress?
     @Published public private(set) var currentProgress: ScanProgress?
     @Published public private(set) var scanResult: ScanResult?
     @Published public var items: [CleanupItem] = []
@@ -135,13 +136,30 @@ public final class DeveloperCleanerViewModel: ObservableObject {
         guard !isCleaning, selectedCount > 0 else { return }
         isCleaning = true
         let selected = items.filter(\.isSelected)
-        let result = await environment.cleanEngine.clean(items: selected)
+        let totalSelectedBytes = selected.reduce(0) { $0 + $1.size }
+
+        cleanProgress = CleanProgress(
+            currentItemName: selected.first?.displayName ?? "Preparing cleanup…",
+            currentItemPath: selected.first?.url.path ?? "",
+            currentCategory: selected.first?.category,
+            completedItemsCount: 0,
+            totalItemsCount: selected.count,
+            bytesReclaimed: 0,
+            totalBytes: totalSelectedBytes
+        )
+
+        let result = await environment.cleanEngine.clean(items: selected) { [weak self] progress in
+            Task { @MainActor in
+                self?.cleanProgress = progress
+            }
+        }
 
         lastCleanResult = result
 
         items.removeAll { item in
             item.isSelected && !result.failures.contains(where: { $0.url == item.url })
         }
+        cleanProgress = nil
         isCleaning = false
     }
 }

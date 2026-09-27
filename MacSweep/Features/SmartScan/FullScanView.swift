@@ -18,6 +18,12 @@ public struct FullScanView: View {
                     onPauseResume: viewModel.togglePause,
                     onStop: viewModel.stopScan
                 )
+            } else if viewModel.isCleaning {
+                CleaningProgressView(
+                    progress: viewModel.cleanProgress,
+                    title: "Cleaning Full Scan Items",
+                    subtitle: "Permanently removing selected system and application caches…"
+                )
             } else if let result = viewModel.lastCleanResult {
                 ScanSummaryView(result: result, onScanAgain: startScan)
             } else if viewModel.scanResult == nil {

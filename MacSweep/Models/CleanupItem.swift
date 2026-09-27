@@ -18,6 +18,11 @@ public struct CleanupItem: Identifiable, Hashable, Sendable {
         ByteFormatter.format(size)
     }
 
+    /// Display name of the item.
+    public var displayName: String {
+        name
+    }
+
     /// Relative date string for UI display.
     public var relativeDate: String {
         AppDateFormatter.relative(modificationDate)
